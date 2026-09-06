@@ -70,6 +70,7 @@ class WebcamCamera : public VideoCaptureBase {
         WebcamCamera(const WebcamCamera&) = delete;
         WebcamCamera& operator=(const WebcamCamera&) = delete;
         WebcamCamera(WebcamCamera&&) = default;
+        WebcamCamera& operator=(WebcamCamera&&) = default;
         ~WebcamCamera() override = default;
 
         Status::Result<Data::Frame> getNextFrame() override;
@@ -86,6 +87,7 @@ class VideoFile : public VideoCaptureBase {
         VideoFile(const VideoFile&) = delete;
         VideoFile& operator=(const VideoFile&) = delete;
         VideoFile(VideoFile&&) = default;
+        VideoFile& operator=(VideoFile&&) = default;
         ~VideoFile() override = default;
 
         Status::Result<Data::Frame> getNextFrame() override;
