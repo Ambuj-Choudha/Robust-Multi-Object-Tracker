@@ -33,6 +33,7 @@ public:
     InferenceEngine(const InferenceEngine&) = delete;
     InferenceEngine& operator=(const InferenceEngine&) = delete;
     InferenceEngine(InferenceEngine&&) = delete;
+    InferenceEngine& operator=(InferenceEngine&&) = delete;
     ~InferenceEngine() = default;
 
     std::optional<Output> infer(const float* input, size_t input_len);

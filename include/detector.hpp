@@ -51,6 +51,7 @@ class YOLOv10DetectorONNX : public DetectorBase{
         YOLOv10DetectorONNX(const YOLOv10DetectorONNX&) = delete;
         YOLOv10DetectorONNX& operator=(const YOLOv10DetectorONNX&) = delete;
         YOLOv10DetectorONNX(YOLOv10DetectorONNX&&) = delete;
+        YOLOv10DetectorONNX& operator=(YOLOv10DetectorONNX&&) = delete;
         ~YOLOv10DetectorONNX() override = default;
 
         Status::Result<std::vector<Data::Detection>> detect(const Data::Frame& frame) override;

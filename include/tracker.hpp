@@ -38,6 +38,7 @@ class ByteTrackerAdapter {
         ByteTrackerAdapter(const ByteTrackerAdapter&) = delete;
         ByteTrackerAdapter& operator=(const ByteTrackerAdapter&) = delete;
         ByteTrackerAdapter(ByteTrackerAdapter&&) = delete;
+        ByteTrackerAdapter& operator=(ByteTrackerAdapter&&) = delete;
         ~ByteTrackerAdapter();
 
         // Per-frame, so a failed solve drops the frame and continues
