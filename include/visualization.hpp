@@ -20,6 +20,7 @@ struct VisualizerConfig {
 namespace VisualizerFixedParams {
     constexpr int font = cv::FONT_HERSHEY_SIMPLEX;
     constexpr int colour_seed = 42;
+    inline const cv::Point fps_text_origin{10, 20};
 }
 
 
@@ -29,6 +30,7 @@ class Visualizer{
 
         void draw_detections(Data::Frame& frame, const std::vector<Data::Detection>& detections);
         void draw_tracked_detections(Data::Frame& frame, const std::vector<Data::TrackedDetection>& tracked);
+        void draw_fps(Data::Frame& frame, double fps);
         void set_font_scale(double new_font_scale);
     private:
         int border_thickness_;

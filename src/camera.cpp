@@ -57,7 +57,6 @@ auto WebcamCamera::getNextFrame() -> Status::Result<Data::Frame> {
     }
 
     record_success();
-    updateFps();
 
     return Data::Frame{frame};
 }
@@ -116,7 +115,6 @@ auto VideoFile::getNextFrame() -> Status::Result<Data::Frame> {
 
     ++frames_read_;
     record_success();
-    updateFps();
 
     return Data::Frame{frame};
 }

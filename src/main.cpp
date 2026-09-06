@@ -7,6 +7,7 @@
 #include <variant>
 
 #include "camera.hpp"
+#include "common/fps.hpp"
 #include "common/status.hpp"
 #include "common/types.hpp"
 #include "detector.hpp"
@@ -37,6 +38,7 @@ int main(int argc, char* argv[]) {
         auto detector = YOLOv10DetectorONNX(model_path);
         auto tracker = ByteTrackerAdapter{};
         auto visualizer_obj = Visualizer(2);
+        Fps fps;
 
         while (true) {
             int key = cv::waitKey(1);
@@ -85,6 +87,7 @@ int main(int argc, char* argv[]) {
             }
 
             visualizer_obj.draw_tracked_detections(input_frame, *tracked_in_current_frame);
+            visualizer_obj.draw_fps(input_frame, fps.tick());
             cv::imshow("Detected Objects", input_frame.mat);
         }
     } catch (const Status::FatalException& e) {

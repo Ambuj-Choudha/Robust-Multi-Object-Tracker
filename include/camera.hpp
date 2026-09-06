@@ -28,14 +28,11 @@ class IInputSource {
         virtual Status::Result<Data::Frame> getNextFrame() = 0;
         [[nodiscard]] virtual Status::SourceState getSourceState()
             const noexcept = 0;
-
-        [[nodiscard]] virtual double getFps() const = 0;
 };
 
 // Abstract base class
 class VideoCaptureBase : public IInputSource {
     public:
-     [[nodiscard]] double getFps() const override { return current_fps_; }
      [[nodiscard]] Status::SourceState getSourceState()
          const noexcept override {
        return source_state_;
@@ -64,19 +61,6 @@ class VideoCaptureBase : public IInputSource {
             retry_monitor_.record_success();
             source_state_ = Status::SourceState::Streaming;
         }
-
-        void updateFps() {
-            int64_t current_tick = cv::getTickCount();
-            double time_delta = static_cast<double>(current_tick - last_frame_tick_) / cv::getTickFrequency();
-            if (time_delta > 0.0) {
-                current_fps_ = 1.0 / time_delta;
-            }
-            last_frame_tick_ = current_tick;
-        }
-
-private:
-    double current_fps_{0.0};
-    int64_t last_frame_tick_{cv::getTickCount()};
 };
 
 class WebcamCamera : public VideoCaptureBase {

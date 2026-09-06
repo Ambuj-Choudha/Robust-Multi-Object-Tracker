@@ -79,6 +79,13 @@ void Visualizer::draw_detections(Data::Frame& frame, const std::vector<Data::Det
     }
 }
 
+void Visualizer::draw_fps(Data::Frame& frame, double fps) {
+    std::string label = std::format("FPS: {:.1f}", fps);
+    const auto& [tr, tg, tb] = text_colour_;
+    cv::putText(frame.mat, label, VisualizerFixedParams::fps_text_origin,
+                VisualizerFixedParams::font, font_scale_, cv::Scalar(tb, tg, tr), 1);
+}
+
 void Visualizer::set_font_scale(double new_font_scale) {
     this->font_scale_ = new_font_scale;
 }
