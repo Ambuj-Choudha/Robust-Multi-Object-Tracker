@@ -45,6 +45,8 @@ add_library(obj_tracker_lib STATIC
     src/camera.cpp
     src/detector.cpp
     src/engine.cpp
+    src/postprocessor.cpp
+    src/preprocessor.cpp
     src/reporting.cpp
     src/transforms.cpp
     src/tracker.cpp
@@ -75,6 +77,8 @@ if(BUILD_TESTS)
     set(TEST_NAMES
         camera
         detector
+        postprocessor
+        preprocessor
         reporting
         retry_monitor
         visualizer)

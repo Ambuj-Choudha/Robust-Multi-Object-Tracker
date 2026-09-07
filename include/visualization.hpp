@@ -11,8 +11,8 @@
 #include "common/types.hpp"
 
 struct VisualizerConfig {
-    static inline std::tuple<int,int,int> text_colour{0, 0, 0};
-    static inline double font_scale = 0.5;
+    static constexpr std::tuple<int,int,int> text_colour{0, 0, 0};
+    static constexpr double font_scale = 0.5;
     static inline std::string class_labels_file_path = "assets/labels/coco.names";
 };
 
@@ -26,7 +26,7 @@ namespace VisualizerFixedParams {
 
 class Visualizer{
     public:
-        Visualizer(int border_thickness, std::optional<std::tuple<int, int, int>> text_colour = std::nullopt);
+        Visualizer(int border_thickness, int num_classes, std::optional<std::tuple<int, int, int>> text_colour = std::nullopt);
 
         void draw_detections(Data::Frame& frame, const std::vector<Data::Detection>& detections);
         void draw_tracked_detections(Data::Frame& frame, const std::vector<Data::TrackedDetection>& tracked);

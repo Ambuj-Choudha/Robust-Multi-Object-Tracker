@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 
         auto detector = YOLOv10DetectorONNX(model_path);
         auto tracker = ByteTrackerAdapter{};
-        auto visualizer_obj = Visualizer(2);
+        auto visualizer_obj = Visualizer(2, detector.num_classes());
         Fps fps;
 
         while (true) {

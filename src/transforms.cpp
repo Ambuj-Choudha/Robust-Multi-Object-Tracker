@@ -4,7 +4,7 @@
 #include "common/status.hpp"
 #include "common/types.hpp"
 #include "transforms.hpp"
-#include "detector.hpp"
+#include "preprocessor.hpp"
 
 std::tuple<cv::Mat, double, int, int> preprocess::apply_letterbox_transform(const Data::Frame& src, int target_size) {
 
@@ -63,13 +63,13 @@ std::tuple<cv::Mat, double, int, int> preprocess::apply_letterbox_transform(cons
 }
 
 Data::BBox postprocess::undo_letter_box_transform(float x1, float y1, float x2, float y2,
-                                                  double scale, int dw, int dh, int img_w, int img_h) {
+                                                  const Data::LetterboxTransform& transform, int img_w, int img_h) {
     // Inverse of apply_letterbox: strip the pad, then undo the uniform scale.
     Data::BBox bbox{};
-    bbox.x1 = static_cast<int>(std::round((x1 - dw) / scale));
-    bbox.y1 = static_cast<int>(std::round((y1 - dh) / scale));
-    bbox.x2 = static_cast<int>(std::round((x2 - dw) / scale));
-    bbox.y2 = static_cast<int>(std::round((y2 - dh) / scale));
+    bbox.x1 = static_cast<int>(std::round((x1 - transform.dw) / transform.scale));
+    bbox.y1 = static_cast<int>(std::round((y1 - transform.dh) / transform.scale));
+    bbox.x2 = static_cast<int>(std::round((x2 - transform.dw) / transform.scale));
+    bbox.y2 = static_cast<int>(std::round((y2 - transform.dh) / transform.scale));
 
     // clip the coordinates to valid image dim
     bbox.x1 = std::clamp(bbox.x1, 0, img_w - 1);

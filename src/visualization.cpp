@@ -10,7 +10,6 @@
 #include<opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-#include "detector.hpp"
 #include "common/status.hpp"
 #include "common/types.hpp"
 #include "visualization.hpp"
@@ -52,24 +51,18 @@ namespace {
     }
 }
 
-Visualizer::Visualizer(int border_thickness,
-                       std::optional<std::tuple<int, int, int>> text_colour)
-    : border_thickness_{border_thickness},
-      text_colour_{text_colour.value_or(VisualizerConfig::text_colour)},
-
-      class_labels_dict_{
-          load_class_labels(VisualizerConfig::class_labels_file_path)},
-      colour_map_{generate_colour_map(DetectorFixedParams::num_classes)} {
-  if (static_cast<int>(class_labels_dict_.size()) !=
-      DetectorFixedParams::num_classes) {
+Visualizer::Visualizer(int border_thickness, int num_classes, std::optional<std::tuple<int, int, int>> text_colour)
+    : border_thickness_{border_thickness}, text_colour_{text_colour.value_or(VisualizerConfig::text_colour)},
+      class_labels_dict_{load_class_labels(VisualizerConfig::class_labels_file_path)}, colour_map_{generate_colour_map(num_classes)} {
+  
+    if (static_cast<int>(class_labels_dict_.size()) != num_classes) {
     throw Status::FatalException(Status::Fatal{
         .origin = Status::Stage::Visualization,
         .cause = std::format(
             "class labels file '{}' has {} entries but this build is "
             "configured for "
             "{} classes - the labels file does not match the model",
-            VisualizerConfig::class_labels_file_path, class_labels_dict_.size(),
-            DetectorFixedParams::num_classes)});
+            VisualizerConfig::class_labels_file_path, class_labels_dict_.size(), num_classes)});
   }
 }
 

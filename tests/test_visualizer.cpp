@@ -27,9 +27,8 @@ int main() {
 
     // 1. The shipped assets agree with the compiled-in class count.
     try {
-        Visualizer visualizer{2};
-        std::cout << "labels file matches DetectorFixedParams::num_classes ("
-                  << DetectorFixedParams::num_classes << ")\n";
+        Visualizer visualizer{2, DetectorFixedParams::num_classes};
+        std::cout << "labels file matches DetectorFixedParams::num_classes (" << DetectorFixedParams::num_classes << ")\n";
     } catch (const Status::FatalException& e) {
         return fail(std::string{"shipped assets are inconsistent: "} + e.what());
     }
@@ -37,8 +36,9 @@ int main() {
     // 2. A missing labels file is fatal at construction, not at first draw.
     VisualizerConfig::class_labels_file_path = std::string{PROJECT_ROOT} + "/assets/labels/does_not_exist.names";
     try {
-        Visualizer visualizer{2};
+        Visualizer visualizer{2, DetectorFixedParams::num_classes};
         return fail("expected a FatalException for a missing labels file");
+        
     } catch (const Status::FatalException& e) {
         if (e.error().origin != Status::Stage::Visualization) {
             return fail("missing labels file reported the wrong stage");
