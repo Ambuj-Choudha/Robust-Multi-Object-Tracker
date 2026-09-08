@@ -15,9 +15,8 @@ enum class Stage { Source, Preprocess, Inference, Postprocess, Tracking, Visuali
 // Update the last enumerator here if you add a stage after Visualization.
 inline constexpr std::size_t stage_count = static_cast<std::size_t>(Stage::Visualization) + 1;
 
-
-[[nodiscard]] inline constexpr std::size_t stage_index(Stage stage) noexcept {
-    return static_cast<std::size_t>(stage);
+[[nodiscard]] constexpr std::size_t stage_index(Stage stage) noexcept {
+  return static_cast<std::size_t>(stage);
 }
 
 struct Failure {

@@ -1,18 +1,20 @@
-#include <sstream>
-#include<string>
-#include<unordered_map>
-#include<optional>
-#include<format>
-#include<fstream>
-#include <stdexcept>
-#include<random>
+#include "visualization.hpp"
+
+#include <format>
+#include <fstream>
 #include <opencv2/core.hpp>
-#include<opencv2/highgui.hpp>
+#include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include <optional>
+#include <random>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <utility>
 
 #include "common/status.hpp"
 #include "common/types.hpp"
-#include "visualization.hpp"
 
 namespace {
     std::unordered_map<int, std::string> load_class_labels(const std::string& labels_file_path) {
@@ -54,8 +56,7 @@ namespace {
 Visualizer::Visualizer(int border_thickness, int num_classes, std::optional<std::tuple<int, int, int>> text_colour)
     : border_thickness_{border_thickness}, text_colour_{text_colour.value_or(VisualizerConfig::text_colour)},
       class_labels_dict_{load_class_labels(VisualizerConfig::class_labels_file_path)}, colour_map_{generate_colour_map(num_classes)} {
-  
-    if (static_cast<int>(class_labels_dict_.size()) != num_classes) {
+  if (std::cmp_not_equal(class_labels_dict_.size(), num_classes)) {
     throw Status::FatalException(Status::Fatal{
         .origin = Status::Stage::Visualization,
         .cause = std::format(

@@ -67,7 +67,9 @@ int main(int argc, char* argv[]) {
             }
 
             if (!frame) {
-                if (should_stop(frame.error())) return -1;
+              if (should_stop(frame.error())) {
+                return -1;
+              }
                 continue;  // inside the threshold: drop this frame, keep looping
             }
             supervisor.record_success(Status::Stage::Source);
@@ -76,7 +78,9 @@ int main(int argc, char* argv[]) {
 
             auto detections_in_current_frame = detector.detect(input_frame);
             if (!detections_in_current_frame) {
-                if (should_stop(detections_in_current_frame.error())) return -1;
+              if (should_stop(detections_in_current_frame.error())) {
+                return -1;
+              }
                 continue;
             }
             supervisor.record_success(Status::Stage::Preprocess);
@@ -85,7 +89,9 @@ int main(int argc, char* argv[]) {
 
             auto tracked_in_current_frame = tracker.update(*detections_in_current_frame);
             if (!tracked_in_current_frame) {
-                if (should_stop(tracked_in_current_frame.error())) return -1;
+              if (should_stop(tracked_in_current_frame.error())) {
+                return -1;
+              }
                 continue;  // one bad solve: drop this frame's tracks, keep looping
             }
             supervisor.record_success(Status::Stage::Tracking);
