@@ -48,6 +48,7 @@ add_library(obj_tracker_lib STATIC
     src/postprocessor.cpp
     src/preprocessor.cpp
     src/reporting.cpp
+    src/supervisor.cpp
     src/transforms.cpp
     src/tracker.cpp
     src/visualization.cpp)
@@ -80,7 +81,7 @@ if(BUILD_TESTS)
         postprocessor
         preprocessor
         reporting
-        retry_monitor
+        supervisor
         visualizer)
 
     foreach(test_name IN LISTS TEST_NAMES)
