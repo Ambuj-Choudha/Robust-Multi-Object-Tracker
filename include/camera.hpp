@@ -36,6 +36,9 @@ class VideoCaptureBase : public IInputSource {
         cv::VideoCapture cap;
 
         Status::SourceState source_state_{Status::SourceState::Streaming};
+
+        // virtual only so a test can substitute a decoder that fails on demand
+        virtual bool read_frame(cv::Mat& frame) { return cap.read(frame); }
 };
 
 class WebcamCamera : public VideoCaptureBase {

@@ -41,7 +41,7 @@ auto WebcamCamera::getNextFrame() -> Status::Result<Data::Frame> {
     bool read_img_ok = false;
 
     try {
-        read_img_ok = cap.read(frame);
+        read_img_ok = read_frame(frame);
     } catch (const cv::Exception& capture_error) {
         if (is_out_of_memory(capture_error)) {
             return std::unexpected(Status::Failure{.origin = Status::Stage::Source, .cause = kOutOfMemoryCause});
@@ -85,7 +85,7 @@ auto VideoFile::getNextFrame() -> Status::Result<Data::Frame> {
     bool read_file_ok = false;
 
     try {
-        read_file_ok = cap.read(frame);
+        read_file_ok = read_frame(frame);
     } catch (const cv::Exception& capture_error) {
         if (is_out_of_memory(capture_error)) {
             return std::unexpected(Status::Failure{.origin = Status::Stage::Source, .cause = kOutOfMemoryCause});
