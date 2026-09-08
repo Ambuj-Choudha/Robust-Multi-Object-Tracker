@@ -15,21 +15,37 @@ enum class Stage { Source, Preprocess, Inference, Postprocess, Tracking, Visuali
 // Update the last enumerator here if you add a stage after Visualization.
 inline constexpr std::size_t stage_count = static_cast<std::size_t>(Stage::Visualization) + 1;
 
+[[nodiscard]] constexpr std::size_t stage_index(Stage stage) noexcept {
+  return static_cast<std::size_t>(stage);
+}
+
+struct Failure {
+    Stage origin;
+    std::string_view cause; 
+};
+
 struct Fatal {
     Stage origin;
     std::string cause;  // a Fatal happens once, so the allocation is fine
 };
 
 struct Recoverable {
-    Stage origin;
-    std::string_view cause;  // avoid re-allocation during retries
-    int attempt_count;  // no. of attempts for turning a recoverable error to fatal
+    Failure failure;
+    int attempt_count;  // length of the failure streak this one belongs to
 };
 
-using Error = std::variant<Fatal, Recoverable>;  // std::variant for stack allocation
+using Error = std::variant<Fatal, Recoverable>;
 
 template <typename T>
-using Result = std::expected<T, Error>;
+using Result = std::expected<T, Failure>;
+
+[[nodiscard]] inline bool is_fatal(const Error& error) noexcept {
+    return std::holds_alternative<Fatal>(error);
+}
+
+[[nodiscard]] inline bool is_recoverable(const Error& error) noexcept {
+    return std::holds_alternative<Recoverable>(error);
+}
 
 // Carries a Fatal, just thrown instead of returned: constructors throw
 // (nothing to return from), the loop returns.
@@ -44,6 +60,6 @@ public:
     Fatal error_;
 };
 
-enum class SourceState { Streaming, EndOfStream, DisconnectedRetrying, Failed };
+enum class SourceState { Streaming, EndOfStream };
 
 }

@@ -7,6 +7,19 @@ namespace Data{
         cv::Mat mat;
     };
 
+    struct LetterboxTransform {
+        // params needed for letterbox transformation inversion
+        double scale;
+        int dw;
+        int dh;
+    };
+
+    struct LetterboxedBlob {
+        // blob for inference, transform for postprocessing
+        cv::Mat blob;
+        LetterboxTransform transform;
+    };
+
     struct BBox{
         // struct for the object's BBox Top-left (x1, y1) and bottom-right(x2, y2)
         int x1;

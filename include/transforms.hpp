@@ -10,6 +10,6 @@ namespace preprocess{
 }
 
 namespace postprocess{
-    Data::BBox undo_letter_box_transform(float x1, float y1, float x2, float y2,
-                                         double scale, int dw, int dh, int img_w, int img_h);
+    Data::BBox undo_letter_box_transform(float x1, float y1, float x2, float y2, 
+                                        const Data::LetterboxTransform& transform, int img_w, int img_h);
 }

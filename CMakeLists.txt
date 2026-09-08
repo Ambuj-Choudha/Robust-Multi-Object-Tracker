@@ -45,7 +45,10 @@ add_library(obj_tracker_lib STATIC
     src/camera.cpp
     src/detector.cpp
     src/engine.cpp
+    src/postprocessor.cpp
+    src/preprocessor.cpp
     src/reporting.cpp
+    src/supervisor.cpp
     src/transforms.cpp
     src/tracker.cpp
     src/visualization.cpp)
@@ -67,17 +70,24 @@ enable_clang_tidy_for(${PROJECT_NAME})
 # Tests
 option(BUILD_TESTS "Build test executables" ON)
 if(BUILD_TESTS)
-    # One entry per tests/test_<name>.cpp. Every test wires up identically
+    enable_testing()
+
+    # One entry per tests/test_<name>.cpp. Every test wires up identically:
+    # a main() returning 0/1 (see tests/test_harness.hpp), so ctest just runs
+    # the executable and checks its exit code.
     set(TEST_NAMES
         camera
         detector
+        postprocessor
+        preprocessor
         reporting
-        retry_monitor
+        supervisor
         visualizer)
 
     foreach(test_name IN LISTS TEST_NAMES)
         add_executable(test_${test_name} tests/test_${test_name}.cpp)
         target_link_libraries(test_${test_name} PRIVATE obj_tracker_lib)
         target_compile_definitions(test_${test_name} PRIVATE PROJECT_ROOT="${CMAKE_SOURCE_DIR}")
+        add_test(NAME ${test_name} COMMAND test_${test_name})
     endforeach()
 endif()

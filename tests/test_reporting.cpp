@@ -48,7 +48,7 @@ class CapturedCerr {
 };
 
 Status::Error recoverable(Status::Stage stage, int attempt) {
-    return Status::Recoverable{stage, kCause, attempt};
+    return Status::Recoverable{Status::Failure{stage, kCause}, attempt};
 }
 
 void fatal_is_never_suppressed(test::Checks& checks) {

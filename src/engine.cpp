@@ -71,7 +71,7 @@ std::optional<InferenceEngine::Output> InferenceEngine::infer(const float* input
     if (shape.size() != 3 || shape[0] != 1) {
         std::string actual;
         for (std::size_t i = 0; i < shape.size(); ++i) {
-          actual += ((i != 0u) ? "," : "") + std::to_string(shape[i]);
+          actual += ((i != 0U) ? "," : "") + std::to_string(shape[i]);
         }
         throw Status::FatalException(Status::Fatal{
             .origin = Status::Stage::Inference,

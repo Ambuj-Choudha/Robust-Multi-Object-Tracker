@@ -43,6 +43,7 @@ test_env/
 scratch/
 
 .claude/
+.agents/
 
 # the docs are currently (WIP)
 docs/

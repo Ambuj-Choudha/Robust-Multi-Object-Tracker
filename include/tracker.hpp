@@ -3,7 +3,6 @@
 #include <memory>
 #include <vector>
 
-#include "common/retry_monitor.hpp"
 #include "common/status.hpp"
 #include "common/types.hpp"
 
@@ -23,9 +22,6 @@ struct TrackerConfig {
 namespace TrackerFixedParams {
     // IoU tuning threshold before a track's class_id is recovered from a detection
 constexpr float class_recovery_min_iou = 0.5F;
-
-// Fault-tolerance policy
-constexpr int RetryBudget = 5;
 }
 
 class ByteTrackerAdapter {
@@ -38,6 +34,7 @@ class ByteTrackerAdapter {
         ByteTrackerAdapter(const ByteTrackerAdapter&) = delete;
         ByteTrackerAdapter& operator=(const ByteTrackerAdapter&) = delete;
         ByteTrackerAdapter(ByteTrackerAdapter&&) = delete;
+        ByteTrackerAdapter& operator=(ByteTrackerAdapter&&) = delete;
         ~ByteTrackerAdapter();
 
         // Per-frame, so a failed solve drops the frame and continues
@@ -45,5 +42,4 @@ class ByteTrackerAdapter {
 
     private:
         std::unique_ptr<byte_track::BYTETracker> impl_;
-        RetryMonitor retry_monitor_;
 };

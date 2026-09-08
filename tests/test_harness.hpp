@@ -57,23 +57,19 @@ class Checks {
         int failures_{0};
 };
 
-// Renders an Error for test output only. Intentionally separate from
-// ConsoleReporter: the reporter rate-limits and writes to cerr, both of which
-// would lose failures here.
+// Renders a Failure or an Error for test output only. Intentionally separate
+// from ConsoleReporter: the reporter rate-limits and writes to cerr, both of
+// which would lose failures here.
+inline std::string describe(const Status::Failure& failure) {
+    return "Failure: " + std::string{failure.cause};
+}
+
 inline std::string describe(const Status::Error& error) {
     if (const auto* fatal = std::get_if<Status::Fatal>(&error)) {
         return "Fatal: " + fatal->cause;
     }
     const auto& recoverable = std::get<Status::Recoverable>(error);
-    return "Recoverable: " + std::string{recoverable.cause};
-}
-
-inline bool is_fatal(const Status::Error& error) {
-    return std::holds_alternative<Status::Fatal>(error);
-}
-
-inline bool is_recoverable(const Status::Error& error) {
-    return std::holds_alternative<Status::Recoverable>(error);
+    return "Recoverable: " + std::string{recoverable.failure.cause};
 }
 
 }  // namespace test

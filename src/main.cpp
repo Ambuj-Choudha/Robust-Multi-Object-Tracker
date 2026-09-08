@@ -7,10 +7,12 @@
 #include <variant>
 
 #include "camera.hpp"
+#include "common/fps.hpp"
 #include "common/status.hpp"
 #include "common/types.hpp"
 #include "detector.hpp"
 #include "reporting.hpp"
+#include "supervisor.hpp"
 #include "tracker.hpp"
 #include "visualization.hpp"
 
@@ -28,15 +30,27 @@ int main(int argc, char* argv[]) {
         using namespace std::string_literals;
         std::string model_path = "assets/model/yolov10n/yolov10n.onnx"s;
 
+        auto failure_thresholds = SupervisorConfig::failure_thresholds;
+
         if (argc < 2) {
             source = std::make_unique<WebcamCamera>();
         } else {
             source = std::make_unique<VideoFile>(argv[1]);
+            failure_thresholds[Status::stage_index(Status::Stage::Source)] = SupervisorConfig::video_file_source_threshold;
         }
+
+        Supervisor supervisor{failure_thresholds};
 
         auto detector = YOLOv10DetectorONNX(model_path);
         auto tracker = ByteTrackerAdapter{};
-        auto visualizer_obj = Visualizer(2);
+        auto visualizer_obj = Visualizer(2, detector.num_classes());
+        Fps fps;
+
+        auto should_stop = [&](const Status::Failure& failure) {
+            const auto error = supervisor.classify(failure);
+            reporter.report(error);
+            return Status::is_fatal(error);
+        };
 
         while (true) {
             int key = cv::waitKey(1);
@@ -53,38 +67,43 @@ int main(int argc, char* argv[]) {
             }
 
             if (!frame) {
-                reporter.report(frame.error());
-
-                if (source->getSourceState() == Status::SourceState::Failed) {
-                    return -1;
-                }
-                continue;  // Recoverable: drop this frame, keep looping
+              if (should_stop(frame.error())) {
+                return -1;
+              }
+                continue;  // inside the threshold: drop this frame, keep looping
             }
+            supervisor.record_success(Status::Stage::Source);
 
             Data::Frame input_frame = *frame;
 
             auto detections_in_current_frame = detector.detect(input_frame);
             if (!detections_in_current_frame) {
-                reporter.report(detections_in_current_frame.error());
-
-                // The detector spent its retry budget and returned Fatal.
-                if (std::holds_alternative<Status::Fatal>(detections_in_current_frame.error())) {
-                    return -1;
+              for (auto stage : detector.detection_stages()) {
+                if (stage == detections_in_current_frame.error().origin) {
+                  break;
                 }
+                supervisor.record_success(stage);
+              }
+              if (should_stop(detections_in_current_frame.error())) {
+                return -1;
+              }
                 continue;
             }
+            supervisor.record_success(Status::Stage::Preprocess);
+            supervisor.record_success(Status::Stage::Inference);
+            supervisor.record_success(Status::Stage::Postprocess);
 
             auto tracked_in_current_frame = tracker.update(*detections_in_current_frame);
             if (!tracked_in_current_frame) {
-                reporter.report(tracked_in_current_frame.error());
-
-                if (std::holds_alternative<Status::Fatal>(tracked_in_current_frame.error())) {
-                    return -1;
-                }
+              if (should_stop(tracked_in_current_frame.error())) {
+                return -1;
+              }
                 continue;  // one bad solve: drop this frame's tracks, keep looping
             }
+            supervisor.record_success(Status::Stage::Tracking);
 
             visualizer_obj.draw_tracked_detections(input_frame, *tracked_in_current_frame);
+            visualizer_obj.draw_fps(input_frame, fps.tick());
             cv::imshow("Detected Objects", input_frame.mat);
         }
     } catch (const Status::FatalException& e) {

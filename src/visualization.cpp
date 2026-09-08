@@ -1,19 +1,20 @@
-#include <sstream>
-#include<string>
-#include<unordered_map>
-#include<optional>
-#include<format>
-#include<fstream>
-#include <stdexcept>
-#include<random>
-#include <opencv2/core.hpp>
-#include<opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
+#include "visualization.hpp"
 
-#include "detector.hpp"
+#include <format>
+#include <fstream>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+#include <optional>
+#include <random>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <utility>
+
 #include "common/status.hpp"
 #include "common/types.hpp"
-#include "visualization.hpp"
 
 namespace {
     std::unordered_map<int, std::string> load_class_labels(const std::string& labels_file_path) {
@@ -52,24 +53,17 @@ namespace {
     }
 }
 
-Visualizer::Visualizer(int border_thickness,
-                       std::optional<std::tuple<int, int, int>> text_colour)
-    : border_thickness_{border_thickness},
-      text_colour_{text_colour.value_or(VisualizerConfig::text_colour)},
-
-      class_labels_dict_{
-          load_class_labels(VisualizerConfig::class_labels_file_path)},
-      colour_map_{generate_colour_map(DetectorFixedParams::num_classes)} {
-  if (static_cast<int>(class_labels_dict_.size()) !=
-      DetectorFixedParams::num_classes) {
+Visualizer::Visualizer(int border_thickness, int num_classes, std::optional<std::tuple<int, int, int>> text_colour)
+    : border_thickness_{border_thickness}, text_colour_{text_colour.value_or(VisualizerConfig::text_colour)},
+      class_labels_dict_{load_class_labels(VisualizerConfig::class_labels_file_path)}, colour_map_{generate_colour_map(num_classes)} {
+  if (std::cmp_not_equal(class_labels_dict_.size(), num_classes)) {
     throw Status::FatalException(Status::Fatal{
         .origin = Status::Stage::Visualization,
         .cause = std::format(
             "class labels file '{}' has {} entries but this build is "
             "configured for "
             "{} classes - the labels file does not match the model",
-            VisualizerConfig::class_labels_file_path, class_labels_dict_.size(),
-            DetectorFixedParams::num_classes)});
+            VisualizerConfig::class_labels_file_path, class_labels_dict_.size(), num_classes)});
   }
 }
 
@@ -77,6 +71,13 @@ void Visualizer::draw_detections(Data::Frame& frame, const std::vector<Data::Det
     for(const auto& detection : detections) {
         this->draw_bbox_w_labels_(frame.mat, detection);
     }
+}
+
+void Visualizer::draw_fps(Data::Frame& frame, double fps) {
+    std::string label = std::format("FPS: {:.1f}", fps);
+    const auto& [tr, tg, tb] = text_colour_;
+    cv::putText(frame.mat, label, VisualizerFixedParams::fps_text_origin,
+                VisualizerFixedParams::font, font_scale_, cv::Scalar(tb, tg, tr), 1);
 }
 
 void Visualizer::set_font_scale(double new_font_scale) {

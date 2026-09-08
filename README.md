@@ -24,15 +24,16 @@ flowchart LR
 | Stage | File | Class |
 |---|---|---|
 | Video Capture | `camera.hpp` | `WebcamCamera` / `VideoFile` |
-| Pre-processing | `detector.hpp` (`preprocess_frames_`) | `YOLOv10DetectorONNX` |
+| Pre-processing | `preprocessor.hpp` | `YOLOPreprocessor` |
 | Detection | `engine.hpp` | `InferenceEngine` |
-| Post-processing | `detector.hpp` (`postprocess_frames_`) | `YOLOv10DetectorONNX` |
+| Post-processing | `postprocessor.hpp` | `YOLOv10Postprocessor` |
 | Tracker | `tracker.hpp` | `ByteTrackerAdapter` |
 | Visualization | `visualization.hpp` | `Visualizer` |
 
 `main.cpp` wires these together in a single loop. Every stage returns `Status::Result<T>` (`common/status.hpp`)
-instead of throwing on ordinary failure, a `Recoverable` error is re-tried (`common/retry_monitor.hpp`) before it escalates to
-`Fatal` and the loop exits. `ConsoleReporter` (`reporting.hpp`) prints the diagonistics in case of failure.
+instead of throwing on ordinary failure, carrying a `Status::Failure` that names the stage and the cause. `Supervisor` (`supervisor.hpp`) decides the severity by counting consecutive failures for each stage and classifies them as either `Recoverable` until a certain threshold is not reached, and `Fatal` after the first failure past it, at which point the loop exits. `ConsoleReporter` (`reporting.hpp`) prints the diagnostics in case of failure.
+
+Constructors are the exception. A source that cannot be opened, or a model that cannot be loaded throw `Status::FatalException` rather than reporting a failure for the supervisor to evaluate.
 
 ## 3.0 Performance
 
@@ -117,17 +118,28 @@ From the repo root (asset paths are relative to CWD):
 
 ### Tests
 
-Five test binaries are built by default with the `dev` preset (the `release` preset disables all of them):
+Seven test binaries are built by default with the `dev` preset (the `release` preset disables all of them).
+Run them all through CTest:
+
+```bash
+ctest --test-dir build-ninja --output-on-failure
+```
+
+Or run one directly, which is easier under a debugger:
 
 ```bash
 ./build-ninja/test_camera
 ./build-ninja/test_detector
+./build-ninja/test_postprocessor
+./build-ninja/test_preprocessor
 ./build-ninja/test_reporting
-./build-ninja/test_retry_monitor
+./build-ninja/test_supervisor
 ./build-ninja/test_visualizer
 ```
 
-The test expects `data/input/horse.jpg` and the YOLOv10n ONNX model at the paths defined in the test file.
+Run from the repo root either way. `test_detector` expects `data/input/horse.jpg` and the YOLOv10n ONNX model at the
+paths defined in the test file; `test_visualizer` expects `assets/labels/coco.names`. The rest need neither hardware
+nor a model.
 
 ### Controls
 
