@@ -11,8 +11,7 @@ namespace {
     }
 }
 
-YOLOPreprocessor::YOLOPreprocessor(int target_size)
-    : target_size_{target_size}, retry_monitor_{Status::Stage::Preprocess, PreprocessorFixedParams::RetryBudget} {}
+YOLOPreprocessor::YOLOPreprocessor(int target_size) : target_size_{target_size} {}
 
 Status::Result<Data::LetterboxedBlob> YOLOPreprocessor::process(const Data::Frame& frame) {
     try {
@@ -30,12 +29,11 @@ Status::Result<Data::LetterboxedBlob> YOLOPreprocessor::process(const Data::Fram
         );
 
         auto blob = cv::dnn::blobFromImageWithParams(letterboxed_frame, imgParams);
-        retry_monitor_.record_success();
         return Data::LetterboxedBlob{.blob = blob, .transform = {.scale = scale, .dw = dw, .dh = dh}};
         
     } catch (const cv::Exception& preprocess_error) {
         if (is_out_of_memory(preprocess_error)) {
-            return std::unexpected(retry_monitor_.record_failure(kBlobOutOfMemoryCause, "preprocess"));
+            return std::unexpected(Status::Failure{.origin = Status::Stage::Preprocess, .cause = kBlobOutOfMemoryCause});
         }
         throw;  // any other cv::Exception is not a modelled in this stage
     }

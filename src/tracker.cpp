@@ -48,8 +48,7 @@ ByteTrackerAdapter::ByteTrackerAdapter(int frame_rate,
                                                      track_buffer,
                                                      track_thresh,
                                                      high_thresh,
-                                                     match_thresh)},
-      retry_monitor_{Status::Stage::Tracking, TrackerFixedParams::RetryBudget} {}
+                                                     match_thresh)} {}
 
 ByteTrackerAdapter::~ByteTrackerAdapter() = default;
 
@@ -72,9 +71,8 @@ ByteTrackerAdapter::update(const std::vector<Data::Detection>& detections) {
     try {
         tracks = impl_->update(objects);
     } catch (const std::runtime_error&) {
-        return std::unexpected(retry_monitor_.record_failure(kSolverFailedCause, "tracker assignment solve"));
+        return std::unexpected(Status::Failure{.origin = Status::Stage::Tracking, .cause = kSolverFailedCause});
     }
-    retry_monitor_.record_success();
 
     // 3) STrack -> TrackedDetection; recover class_id by best-IoU match
     //    against this frame's input detections (ByteTrack is class-agnostic).

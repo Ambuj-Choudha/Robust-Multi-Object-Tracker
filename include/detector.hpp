@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 
-#include "common/retry_monitor.hpp"
 #include "common/status.hpp"
 #include "common/types.hpp"
 #include "engine.hpp"
@@ -12,7 +11,6 @@
 
 namespace DetectorFixedParams {
     constexpr int num_classes = 80;
-    constexpr int InferenceRetryBudget = 10;
 }
 
 class DetectorBase{
@@ -46,6 +44,4 @@ class YOLOv10DetectorONNX : public DetectorBase{
         InferenceEngine engine_;
         YOLOPreprocessor preprocessor_;
         YOLOv10Postprocessor postprocessor_;
-
-        RetryMonitor inference_monitor_;
 };

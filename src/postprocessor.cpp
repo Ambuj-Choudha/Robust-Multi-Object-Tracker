@@ -9,16 +9,13 @@ namespace {
 }
 
 YOLOv10Postprocessor::YOLOv10Postprocessor(double confidence_threshold)
-    : confidence_threshold_{confidence_threshold},
-      retry_monitor_{Status::Stage::Postprocess, PostprocessorFixedParams::RetryBudget} {}
+    : confidence_threshold_{confidence_threshold} {}
 
 Status::Result<std::vector<Data::Detection>> YOLOv10Postprocessor::process(
-    InferenceEngine::Output raw_outputs, const Data::LetterboxTransform& transform,
-    int img_w, int img_h) {
+    InferenceEngine::Output raw_outputs, const Data::LetterboxTransform& transform, int img_w, int img_h) {
+
     if (raw_outputs.cols != PostprocessorFixedParams::OutputFieldsPerRow) {
-      throw Status::FatalException(Status::Fatal{
-          .origin = Status::Stage::Postprocess,
-          .cause = std::format(
+      throw Status::FatalException(Status::Fatal{.origin = Status::Stage::Postprocess, .cause = std::format(
               "model output has {} fields per row, expected {}",
               raw_outputs.cols, PostprocessorFixedParams::OutputFieldsPerRow)});
     }
@@ -47,9 +44,8 @@ Status::Result<std::vector<Data::Detection>> YOLOv10Postprocessor::process(
                                                  .confidence_score = conf});
         }
     } catch (const std::bad_alloc&) {
-        return std::unexpected(retry_monitor_.record_failure(kDetectionsOutOfMemoryCause, "postprocess"));
+        return std::unexpected(Status::Failure{.origin = Status::Stage::Postprocess, .cause = kDetectionsOutOfMemoryCause});
     }
 
-    retry_monitor_.record_success();
     return detections;
 }

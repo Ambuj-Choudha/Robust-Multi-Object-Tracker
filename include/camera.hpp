@@ -3,22 +3,14 @@
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
-#include <format>
-#include <iostream>
 #include <string>
-#include <string_view>
 
-#include "common/retry_monitor.hpp"
 #include "common/status.hpp"
 #include "common/types.hpp"
 
 namespace CameraDefaults {
     inline constexpr int FrameDefaultWidth  = 1280;
     inline constexpr int FrameDefaultHeight = 720;
-
-    // Consecutive failed reads allowed before it becomes a fatal error
-    inline constexpr int WebcamRetryBudget    = 150;
-    inline constexpr int VideoFileRetryBudget = 10;
 }
 
 // Pure interface
@@ -39,34 +31,16 @@ class VideoCaptureBase : public IInputSource {
      }
 
     protected:
-        explicit VideoCaptureBase(int retry_budget)
-            : retry_monitor_{Status::Stage::Source, retry_budget} {}
+        VideoCaptureBase() = default;
 
         cv::VideoCapture cap;
 
-        RetryMonitor retry_monitor_;
         Status::SourceState source_state_{Status::SourceState::Streaming};
-
-        // message is const char* rather than string_view on purpose:
-        // it has to be a literal (it ends up in a non-owning view)
-        Status::Error record_failure(const char* message, std::string_view operation) {
-            auto error = retry_monitor_.record_failure(message, operation);
-
-            source_state_ = retry_monitor_.exhausted() ? Status::SourceState::Failed
-                                                      : Status::SourceState::DisconnectedRetrying;
-            return error;
-        }
-
-        void record_success() {
-            retry_monitor_.record_success();
-            source_state_ = Status::SourceState::Streaming;
-        }
 };
 
 class WebcamCamera : public VideoCaptureBase {
     public:
-        WebcamCamera(int deviceID = 0, int apiID = cv::CAP_ANY,
-                     int retry_budget = CameraDefaults::WebcamRetryBudget);
+        WebcamCamera(int deviceID = 0, int apiID = cv::CAP_ANY);
         WebcamCamera(const WebcamCamera&) = delete;
         WebcamCamera& operator=(const WebcamCamera&) = delete;
         WebcamCamera(WebcamCamera&&) = default;
@@ -82,8 +56,7 @@ class WebcamCamera : public VideoCaptureBase {
 
 class VideoFile : public VideoCaptureBase {
     public:
-        VideoFile(const std::string& source_file, int apiID = cv::CAP_ANY,
-                  int retry_budget = CameraDefaults::VideoFileRetryBudget);
+        VideoFile(const std::string& source_file, int apiID = cv::CAP_ANY);
         VideoFile(const VideoFile&) = delete;
         VideoFile& operator=(const VideoFile&) = delete;
         VideoFile(VideoFile&&) = default;

@@ -2,7 +2,6 @@
 
 #include <opencv2/core.hpp>
 
-#include "common/retry_monitor.hpp"
 #include "common/status.hpp"
 #include "common/types.hpp"
 
@@ -11,9 +10,6 @@ namespace PreprocessorFixedParams {
     inline const cv::Scalar mean{0, 0, 0};
     constexpr bool swapRB = true;
     inline const cv::Scalar LetterboxPaddingColour{114, 114, 114};
-
-    // Fault-tolerance policy
-    constexpr int RetryBudget = 10;
 }
 
 // Turns a raw frame into a model-ready blob: letterbox to a square, then
@@ -26,5 +22,4 @@ class YOLOPreprocessor {
 
     private:
         int target_size_;
-        RetryMonitor retry_monitor_;
 };

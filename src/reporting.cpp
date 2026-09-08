@@ -38,9 +38,9 @@ void ConsoleReporter::report(const Status::Error& error) {
 
     // Dropped error report if the minimal interval is not elapsed, otherwise print
     const auto& recoverable = std::get<Status::Recoverable>(error);
-    if (!start_new_warning_interval_(recoverable.origin)) {
+    if (!start_new_warning_interval_(recoverable.failure.origin)) {
         return;
     }
-    std::cerr << "[WARN] [" << stage_name(recoverable.origin) << "] " << recoverable.cause
-              << " (attempt " << recoverable.attempt_count << ")\n";
+    std::cerr << "[WARN] [" << stage_name(recoverable.failure.origin) << "] "
+              << recoverable.failure.cause << " (attempt " << recoverable.attempt_count << ")\n";
 }

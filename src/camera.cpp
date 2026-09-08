@@ -21,16 +21,13 @@ namespace {
     }
 }
 
-WebcamCamera::WebcamCamera(int deviceID, int apiID, int retry_budget)
-    : VideoCaptureBase{retry_budget}, deviceID{deviceID}, apiID{apiID} {
-
+WebcamCamera::WebcamCamera(int deviceID, int apiID) : deviceID{deviceID}, apiID{apiID} {
     cap.open(deviceID, apiID);
     if (!cap.isOpened()) {
-      throw Status::FatalException(Status::Fatal{
-          .origin = Status::Stage::Source,
-          .cause = std::format("Error: Could not open camera with deviceID: {}",
-                               deviceID)});
+      throw Status::FatalException(Status::Fatal{.origin = Status::Stage::Source,
+                                  .cause = std::format("Error: Could not open camera with deviceID: {}", deviceID)});
     }
+    
     std::cout << "Camera initialized successfully!\n";
     cap.set(cv::CAP_PROP_FRAME_WIDTH, CameraDefaults::FrameDefaultWidth);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, CameraDefaults::FrameDefaultHeight);
@@ -47,30 +44,25 @@ auto WebcamCamera::getNextFrame() -> Status::Result<Data::Frame> {
         read_img_ok = cap.read(frame);
     } catch (const cv::Exception& capture_error) {
         if (is_out_of_memory(capture_error)) {
-            return std::unexpected(record_failure(kOutOfMemoryCause, "camera frame allocation"));
+            return std::unexpected(Status::Failure{.origin = Status::Stage::Source, .cause = kOutOfMemoryCause});
         }
         throw;  // any other cv::Exception is not a modelled in this stage
     }
 
     if (!read_img_ok || frame.empty()) {
-        return std::unexpected(record_failure(kEmptyFrameCause, "camera"));
+        return std::unexpected(Status::Failure{.origin = Status::Stage::Source, .cause = kEmptyFrameCause});
     }
-
-    record_success();
 
     return Data::Frame{frame};
 }
 
-VideoFile::VideoFile(const std::string& source_file, int apiID, int retry_budget)
-    : VideoCaptureBase{retry_budget}, source_file{source_file}, apiID{apiID} {
+VideoFile::VideoFile(const std::string& source_file, int apiID)
+    : source_file{source_file}, apiID{apiID} {
 
     cap.open(source_file, apiID);
     if (!cap.isOpened()) {
-      throw Status::FatalException(Status::Fatal{
-          .origin = Status::Stage::Source,
-          .cause = std::format("ERROR: Unable to open source file '{}'. Please "
-                               "check the file path and format.",
-                               source_file)});
+      throw Status::FatalException(Status::Fatal{.origin = Status::Stage::Source, 
+                                    .cause = std::format("ERROR: Unable to open source file '{}'. Please check the file path and format.", source_file)});
     }
     cap.set(cv::CAP_PROP_FRAME_WIDTH, CameraDefaults::FrameDefaultWidth);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, CameraDefaults::FrameDefaultHeight);
@@ -96,25 +88,24 @@ auto VideoFile::getNextFrame() -> Status::Result<Data::Frame> {
         read_file_ok = cap.read(frame);
     } catch (const cv::Exception& capture_error) {
         if (is_out_of_memory(capture_error)) {
-            return std::unexpected(record_failure(kOutOfMemoryCause, "video frame allocation"));
+            return std::unexpected(Status::Failure{.origin = Status::Stage::Source, .cause = kOutOfMemoryCause});
         }
         throw;
     }
 
     if (!read_file_ok) {
         if (expected_frame_count_ > 0 && frames_read_ < expected_frame_count_) {
-            return std::unexpected(record_failure(kDecodeFailedCause, "video decode"));
+            return std::unexpected(Status::Failure{.origin = Status::Stage::Source, .cause = kDecodeFailedCause});
         }
         source_state_ = Status::SourceState::EndOfStream;
         return Data::Frame{};
     }
 
     if (frame.empty()) {
-        return std::unexpected(record_failure(kEmptyDecodeCause, "video decode"));
+        return std::unexpected(Status::Failure{.origin = Status::Stage::Source, .cause = kEmptyDecodeCause});
     }
 
     ++frames_read_;
-    record_success();
 
     return Data::Frame{frame};
 }
