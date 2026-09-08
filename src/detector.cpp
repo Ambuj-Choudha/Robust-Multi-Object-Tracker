@@ -1,8 +1,14 @@
 #include "detector.hpp"
+
+#include <array>
+
 #include "common/types.hpp"
 
 namespace {
     constexpr const char* kInferenceFailedCause = "inference run failed for this frame";
+
+    // Must match the order of the steps in detect(), below.
+    constexpr std::array kdetectionPipeline{Status::Stage::Preprocess, Status::Stage::Inference, Status::Stage::Postprocess};
 }
 
 YOLOv10DetectorONNX::YOLOv10DetectorONNX(const std::string& model_path, double confidence_threshold)
@@ -24,4 +30,8 @@ Status::Result<std::vector<Data::Detection>> YOLOv10DetectorONNX::detect(const D
 
     // Step 3: Undo letterbox, wrap in the DS and return
     return postprocessor_.process(*raw_outputs, preprocessed_frame->transform, frame.mat.cols, frame.mat.rows);
+}
+
+std::span<const Status::Stage> YOLOv10DetectorONNX::detection_stages() const noexcept {
+    return kdetectionPipeline;
 }

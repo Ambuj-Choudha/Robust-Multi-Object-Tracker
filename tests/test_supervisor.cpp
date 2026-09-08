@@ -128,6 +128,33 @@ void the_judgment_carries_the_stage_and_cause(test::Checks& checks) {
                  "Fatal quotes the underlying cause, not just the count");
 }
 
+// The regression this design exists to prevent. main() reports success for the
+// detector stages that ran before a failing one, so two Preprocess failures
+// separated by a frame where preprocessing succeeded are not consecutive.
+//
+// Without that reporting the streak inflates: sporadic failures interleaved
+// across the three detector stages would cross a threshold and stop a pipeline
+// in which no stage ever failed its threshold number of times in a row.
+void an_interleaved_failure_does_not_inflate_an_earlier_streak(test::Checks& checks) {
+    auto supervisor = make_supervisor();
+
+    // Frame N: preprocessing fails.
+    const auto first = fail_once(supervisor, Status::Stage::Preprocess);
+    checks.check_eq(std::get<Status::Recoverable>(first).attempt_count, 1,
+                    "frame N: the Preprocess streak opens at 1");
+
+    // Frame N+1: preprocessing succeeds, inference fails. main() reports the
+    // Preprocess success because Preprocess runs before Inference.
+    supervisor.record_success(Status::Stage::Preprocess);
+    fail_once(supervisor, Status::Stage::Inference);
+
+    // Frame N+2: preprocessing fails again. The two failures were not
+    // consecutive, so this is a fresh streak.
+    const auto third = fail_once(supervisor, Status::Stage::Preprocess);
+    checks.check_eq(std::get<Status::Recoverable>(third).attempt_count, 1,
+                    "frame N+2: the Preprocess streak restarts, it does not resume at 2");
+}
+
 // The shipped table has to line up with the enum, or every stage is classified
 // against its neighbour's tolerance.
 void the_shipped_table_covers_every_stage(test::Checks& checks) {
@@ -152,6 +179,7 @@ int main() {
     stages_are_counted_independently(checks);
     a_success_elsewhere_does_not_clear_a_streak(checks);
     the_judgment_carries_the_stage_and_cause(checks);
+    an_interleaved_failure_does_not_inflate_an_earlier_streak(checks);
     the_shipped_table_covers_every_stage(checks);
 
     return checks.report();

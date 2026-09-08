@@ -1,5 +1,6 @@
 #pragma once
 
+#include <span>
 #include <string>
 #include <vector>
 
@@ -19,6 +20,7 @@ class DetectorBase{
         virtual Status::Result<std::vector<Data::Detection>> detect(const Data::Frame& frame) = 0;
 
         [[nodiscard]] virtual int num_classes() const noexcept = 0;
+        [[nodiscard]] virtual std::span<const Status::Stage> detection_stages() const noexcept = 0;
 };
 
 
@@ -39,6 +41,8 @@ class YOLOv10DetectorONNX : public DetectorBase{
         [[nodiscard]] int num_classes() const noexcept override {
             return DetectorFixedParams::num_classes;
         }
+
+        [[nodiscard]] std::span<const Status::Stage> detection_stages() const noexcept override;
 
     private:
         InferenceEngine engine_;

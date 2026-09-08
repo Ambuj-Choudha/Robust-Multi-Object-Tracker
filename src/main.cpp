@@ -78,6 +78,12 @@ int main(int argc, char* argv[]) {
 
             auto detections_in_current_frame = detector.detect(input_frame);
             if (!detections_in_current_frame) {
+              for (auto stage : detector.detection_stages()) {
+                if (stage == detections_in_current_frame.error().origin) {
+                  break;
+                }
+                supervisor.record_success(stage);
+              }
               if (should_stop(detections_in_current_frame.error())) {
                 return -1;
               }
